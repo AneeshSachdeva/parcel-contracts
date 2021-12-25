@@ -1,4 +1,4 @@
-# Basic Sample Hardhat Project
+# Parcel
 
 This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
 
@@ -24,4 +24,8 @@ Interesting things learned during this project:
 - Storage vs. memory vs. calldata gas considerations (also view vs. pure, and usage in parameters)
 - OpenZeppelin contracts
     - Counters: saves gas by avoiding SafeMath check: https://docs.openzeppelin.com/contracts/3.x/api/utils#Counters
-- Gas optimizations
+- Deployment constraints (gas): https://news.ycombinator.com/item?id=28625485
+- Relaying gas through meta transactions: https://eips.ethereum.org/EIPS/eip-2771
+- NatSpec is not storred on chain
+    - Error message without parameters and documented via NatSpec only needs
+    four bytes of data. --> descriptive reverts for less gas
