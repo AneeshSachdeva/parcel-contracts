@@ -2,9 +2,6 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Parcel } from "../typechain-types/Parcel";
-import { TestToken } from "../typechain-types/TestToken";
-import { TestNFT } from "../typechain-types/TestNFT";
 import keccak256 from "keccak256";
 
 describe("Parcel contract (naive)", function () {
