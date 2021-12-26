@@ -25,6 +25,8 @@ Interesting things learned during this project:
 - OpenZeppelin contracts
     - Counters: saves gas by avoiding SafeMath check: https://docs.openzeppelin.com/contracts/3.x/api/utils#Counters
 - Deployment constraints (gas): https://news.ycombinator.com/item?id=28625485
+    - https://ethereum.stackexchange.com/questions/35539/what-is-the-real-price-of-deploying-a-contract-on-the-mainnet/37898
+    - https://hackernoon.com/costs-of-a-real-world-ethereum-contract-2033511b3214
 - Relaying gas through meta transactions: https://eips.ethereum.org/EIPS/eip-2771
 - NatSpec is not storred on chain
     - Error message without parameters and documented via NatSpec only needs

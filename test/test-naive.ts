@@ -7,7 +7,7 @@ import { TestToken } from "../typechain-types/TestToken";
 import { TestNFT } from "../typechain-types/TestNFT";
 import keccak256 from "keccak256";
 
-describe("Parcel contract", function () {
+describe("Parcel contract (naive)", function () {
   // Define common variables for tests
   let Token: ContractFactory;
   let NFT: ContractFactory;
@@ -53,7 +53,14 @@ describe("Parcel contract", function () {
 
   describe("Receive assets", function() {
     it("Receives ETH", async function () {
-      
+      // Send ETH from owner to parcel
+      await owner.sendTransaction({
+        to: testParcel.address,
+        value: ethers.utils.parseEther("1")
+      })
+      expect(await testParcel.ethBalance())
+        .to
+        .equals(ethers.utils.parseEther("1"));
     });
 
     it("Receives ERC-20 tokens", async function () {
