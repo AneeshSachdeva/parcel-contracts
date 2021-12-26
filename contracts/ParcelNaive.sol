@@ -185,12 +185,14 @@ contract Parcel is IERC721Receiver {
 
         // Transfer NFTs
         for (uint256 ii=0; ii < nfts.length; ii++) {
+            // Get NFT
             NFT memory nft = nfts[ii];
+            ERC721 token = ERC721(nft.tokenAddr);
             // Update state - delete only sets empty struct and does not shift
             // array elements
-            // delete nftBalance[ii];
-            ERC721 token = ERC721(nft.tokenAddr);
-            token.transferFrom(address(this), msg.sender, nft.tokenId);
+            delete nfts[ii];
+            // Transfer (can throw since we're using safe transfer)
+            token.safeTransferFrom(address(this), msg.sender, nft.tokenId);
         }
 
         // Self destruct parcel
