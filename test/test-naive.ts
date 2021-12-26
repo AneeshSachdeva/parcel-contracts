@@ -1,19 +1,24 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const keccak256 = require("keccak256");
+import { expect } from "chai";
+import { ethers } from "hardhat";
+import { Contract, ContractFactory } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Parcel } from "../typechain-types/Parcel";
+import { TestToken } from "../typechain-types/TestToken";
+import { TestNFT } from "../typechain-types/TestNFT";
+import keccak256 from "keccak256";
 
 describe("Parcel contract", function () {
   // Define common variables for tests
-  let Token;
-  let testToken;
-  let NFT;
-  let testNFT;
-  let Parcel;
-  let testParcel;
-  let parcelKey;
-  let owner;  // Creates the parcel and sends assets
-  let addr1;  // Sends assets to parcel
-  let receiver;  // Receives the parcel
+  let Token: ContractFactory;
+  let NFT: ContractFactory;
+  let Parcel: ContractFactory;
+  let testToken: Contract;
+  let testNFT: Contract;
+  let testParcel: Contract;
+  let parcelKey: Buffer;
+  let owner: SignerWithAddress;  // Creates the parcel and sends assets
+  let addr1: SignerWithAddress;  // Sends assets to parcel
+  let receiver: SignerWithAddress;  // Receives the parcel
 
   beforeEach(async function () {
     // The key that is used to unlock the parcel
@@ -46,9 +51,9 @@ describe("Parcel contract", function () {
     });
   })
 
-  describe("Transactions", function() {
+  describe("Receive assets", function() {
     it("Receives ETH", async function () {
-
+      
     });
 
     it("Receives ERC-20 tokens", async function () {
@@ -61,16 +66,16 @@ describe("Parcel contract", function () {
     it("Receives ERC-721", async function () {
       // Send ERC-721 from owner to parcel (tokenId = 1)
       await testNFT.approve(testParcel.address, 1);
-      await testNFT.safeTransfer(owner.address, testParcel.address, 1);
+      await testNFT.transferFrom(owner.address, testParcel.address, 1);
     });
 
-    it("Does not open for signer with the wrong secret", async function () {
+    // it("Does not open for signer with the wrong secret", async function () {
 
-    });
+    // });
         
-    it("Opens and sends assets to signer with the correct secret", 
-      async function () {
+    // it("Opens and sends assets to signer with the correct secret", 
+    //   async function () {
 
-    });
+    // });
   });
 });
