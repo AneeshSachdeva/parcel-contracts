@@ -49,14 +49,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC165__factory>;
     getContractFactory(
-      name: "Greeter",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Greeter__factory>;
-    getContractFactory(
-      name: "Parcel",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Parcel__factory>;
-    getContractFactory(
       name: "ParcelV2",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ParcelV2__factory>;
@@ -64,14 +56,6 @@ declare module "hardhat/types/runtime" {
       name: "Parcel",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Parcel__factory>;
-    getContractFactory(
-      name: "TestNFT",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TestNFT__factory>;
-    getContractFactory(
-      name: "TestToken",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TestToken__factory>;
     getContractFactory(
       name: "TestNFT",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -127,16 +111,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC165>;
     getContractAt(
-      name: "Greeter",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Greeter>;
-    getContractAt(
-      name: "Parcel",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Parcel>;
-    getContractAt(
       name: "ParcelV2",
       address: string,
       signer?: ethers.Signer
@@ -146,16 +120,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Parcel>;
-    getContractAt(
-      name: "TestNFT",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TestNFT>;
-    getContractAt(
-      name: "TestToken",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TestToken>;
     getContractAt(
       name: "TestNFT",
       address: string,

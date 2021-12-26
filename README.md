@@ -31,3 +31,4 @@ Interesting things learned during this project:
 - NatSpec is not storred on chain
     - Error message without parameters and documented via NatSpec only needs
     four bytes of data. --> descriptive reverts for less gas
+- Hardhad syntax for calling overloaded function: https://forum.openzeppelin.com/t/where-is-safefromtransfer-function-in-contract-instance/12020

@@ -20,12 +20,14 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface ParcelInterface extends utils.Interface {
   functions: {
     "addTokens(address,uint256)": FunctionFragment;
+    "balanceOfNFTs()": FunctionFragment;
     "ethBalance()": FunctionFragment;
     "isCommunal()": FunctionFragment;
     "lock()": FunctionFragment;
     "makeCommunal()": FunctionFragment;
+    "nfts(uint256)": FunctionFragment;
     "onERC721Received(address,address,uint256,bytes)": FunctionFragment;
-    "open(bytes32)": FunctionFragment;
+    "open(bytes)": FunctionFragment;
     "sender()": FunctionFragment;
     "state()": FunctionFragment;
     "tokenBalanceOf(address)": FunctionFragment;
@@ -35,6 +37,10 @@ export interface ParcelInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "addTokens",
     values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "balanceOfNFTs",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "ethBalance",
@@ -49,6 +55,7 @@ export interface ParcelInterface extends utils.Interface {
     functionFragment: "makeCommunal",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "nfts", values: [BigNumberish]): string;
   encodeFunctionData(
     functionFragment: "onERC721Received",
     values: [string, string, BigNumberish, BytesLike]
@@ -66,6 +73,10 @@ export interface ParcelInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "addTokens", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "balanceOfNFTs",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "ethBalance", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isCommunal", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "lock", data: BytesLike): Result;
@@ -73,6 +84,7 @@ export interface ParcelInterface extends utils.Interface {
     functionFragment: "makeCommunal",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "nfts", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "onERC721Received",
     data: BytesLike
@@ -133,6 +145,8 @@ export interface Parcel extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    balanceOfNFTs(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     ethBalance(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     isCommunal(overrides?: CallOverrides): Promise<[boolean]>;
@@ -145,11 +159,16 @@ export interface Parcel extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    nfts(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber] & { tokenAddr: string; tokenId: BigNumber }>;
+
     onERC721Received(
-      operator: string,
+      arg0: string,
       from: string,
       tokenId: BigNumberish,
-      data: BytesLike,
+      arg3: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -179,6 +198,8 @@ export interface Parcel extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  balanceOfNFTs(overrides?: CallOverrides): Promise<BigNumber>;
+
   ethBalance(overrides?: CallOverrides): Promise<BigNumber>;
 
   isCommunal(overrides?: CallOverrides): Promise<boolean>;
@@ -191,11 +212,16 @@ export interface Parcel extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  nfts(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<[string, BigNumber] & { tokenAddr: string; tokenId: BigNumber }>;
+
   onERC721Received(
-    operator: string,
+    arg0: string,
     from: string,
     tokenId: BigNumberish,
-    data: BytesLike,
+    arg3: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -222,6 +248,8 @@ export interface Parcel extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    balanceOfNFTs(overrides?: CallOverrides): Promise<BigNumber>;
+
     ethBalance(overrides?: CallOverrides): Promise<BigNumber>;
 
     isCommunal(overrides?: CallOverrides): Promise<boolean>;
@@ -230,11 +258,16 @@ export interface Parcel extends BaseContract {
 
     makeCommunal(overrides?: CallOverrides): Promise<void>;
 
+    nfts(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string, BigNumber] & { tokenAddr: string; tokenId: BigNumber }>;
+
     onERC721Received(
-      operator: string,
+      arg0: string,
       from: string,
       tokenId: BigNumberish,
-      data: BytesLike,
+      arg3: BytesLike,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -264,6 +297,8 @@ export interface Parcel extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    balanceOfNFTs(overrides?: CallOverrides): Promise<BigNumber>;
+
     ethBalance(overrides?: CallOverrides): Promise<BigNumber>;
 
     isCommunal(overrides?: CallOverrides): Promise<BigNumber>;
@@ -276,11 +311,13 @@ export interface Parcel extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    nfts(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
     onERC721Received(
-      operator: string,
+      arg0: string,
       from: string,
       tokenId: BigNumberish,
-      data: BytesLike,
+      arg3: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -308,6 +345,8 @@ export interface Parcel extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    balanceOfNFTs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     ethBalance(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     isCommunal(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -320,11 +359,16 @@ export interface Parcel extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    nfts(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     onERC721Received(
-      operator: string,
+      arg0: string,
       from: string,
       tokenId: BigNumberish,
-      data: BytesLike,
+      arg3: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

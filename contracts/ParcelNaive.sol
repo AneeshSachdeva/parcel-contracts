@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >= 0.7.0 < 0.9.0;
 
+import "hardhat/console.sol";
+
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 /// Use parcels to transmit on-chain assets without knowing the 
@@ -13,7 +16,6 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 /// 3. Lock the contract with a secret.
 /// 4. Use secret to trasnfer assets out of the contract.
 contract Parcel is IERC721Receiver {
-
     // Parcel states
     enum State { Open, Locked, Emptied }
     State public state;
@@ -27,11 +29,17 @@ contract Parcel is IERC721Receiver {
     // ETH received
     uint256 public ethBalance;
 
-    // Balances of tokens in parcel. Array of addresses and
-    // token count are used to iterate over the mapping.
+    // Balances of tokens in parcel. Use array of keys to iterate over the 
+    // mapping.
     mapping (address => uint256) public tokenBalanceOf;
     address[] tokenAddrs;
-    uint256 tokenCount;
+
+    // NFTs in parcel.
+    struct NFT {
+        address tokenAddr;
+        uint256 tokenId;
+    }
+    NFT[] public nfts;
 
     // Hash of the secret that the recipient uses to
     // unlock the parcel. 
@@ -59,10 +67,12 @@ contract Parcel is IERC721Receiver {
     }
 
     modifier communal() {
-        if (!isCommunal && msg.sender != sender)
+        if (!isCommunal && msg.sender != sender) {
+            console.log(msg.sender);
             revert(
                 "Parcel is not communal and cannot accept your asset."
             );
+        }
         _;
     }
 
@@ -120,28 +130,31 @@ contract Parcel is IERC721Receiver {
         require(success, "Tokens failed to transfer to parcel.");
 
         // Track balance
+        if (tokenBalanceOf[tokenAddr] == 0)
+            tokenAddrs.push(tokenAddr);
         tokenBalanceOf[tokenAddr] += amount;
-        tokenAddrs.push(tokenAddr);
-        tokenCount++;
     }
 
-    /// Add NFT to parcel.
+    /// Add NFT to parcel, from approved owners only.
     function onERC721Received(
-        address operator,
+        address,
         address from,
         uint256 tokenId,
-        bytes calldata data
-    ) external override returns (bytes4) {
+        bytes memory
+    ) public virtual override returns (bytes4) {
+        // Note: msg.sender is the token address, operator is the caller
+        if (!isCommunal)
+            require(from == sender, "Cannot accept NFT from this owner.");
+        nfts.push(NFT(msg.sender, tokenId));
         return this.onERC721Received.selector;
     }
 
     /// Open parcel with the secret and transfer contents.
-    function open(bytes32 secret) external {
+    function open(bytes calldata secret) external {
         // Check conditions
         require(state == State.Locked, "Invalid state.");
         require(
-            //hashedSecret == keccak256(secret),
-            hashedSecret == secret,
+            hashedSecret == keccak256(secret),
             "Incorrect secret."
         );
         // Emit event
@@ -158,8 +171,8 @@ contract Parcel is IERC721Receiver {
         }
         
         // Transfer ERC-20 tokens
-        if (tokenCount > 0) {
-            for (uint256 ii=0; ii < tokenCount; ii++) {
+        if (tokenAddrs.length > 0) {
+            for (uint256 ii=0; ii < tokenAddrs.length; ii++) {
                 address tokenAddr = tokenAddrs[ii];
                 uint256 amount = tokenBalanceOf[tokenAddr];
                 _transferToken(
@@ -171,6 +184,14 @@ contract Parcel is IERC721Receiver {
         }
 
         // Transfer NFTs
+        for (uint256 ii=0; ii < nfts.length; ii++) {
+            NFT memory nft = nfts[ii];
+            // Update state - delete only sets empty struct and does not shift
+            // array elements
+            // delete nftBalance[ii];
+            ERC721 token = ERC721(nft.tokenAddr);
+            token.transferFrom(address(this), msg.sender, nft.tokenId);
+        }
 
         // Self destruct parcel
     }
@@ -187,5 +208,9 @@ contract Parcel is IERC721Receiver {
         bool success = token.transfer(recipient, amount);
         // Check sucsess
         require(success, "Failed to transfer");
+    }
+
+    function balanceOfNFTs() external view returns (uint256) {
+        return nfts.length;
     }
 }

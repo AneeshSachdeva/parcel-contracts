@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract, ContractFactory } from "ethers";
+import { BigNumber, Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import keccak256 from "keccak256";
 
@@ -17,10 +17,10 @@ describe("Parcel contract (naive)", function () {
   let addr1: SignerWithAddress;  // Sends assets to parcel
   let receiver: SignerWithAddress;  // Receives the parcel
 
-  beforeEach(async function () {
+  before(async function () {
     // The key that is used to unlock the parcel
     // TODO: replace 'test_key' with random buffer input
-    parcelKey = keccak256('test_key');
+    parcelKey = Buffer.from('test_key');
 
     // Get the ContractFactory and Signers here.
     Token = await ethers.getContractFactory("TestToken");
@@ -29,9 +29,10 @@ describe("Parcel contract (naive)", function () {
     [owner, addr1, receiver] = await ethers.getSigners();
 
     // Deploy contracts.
+    let hashedKey: Buffer = keccak256(parcelKey);
     testToken = await Token.deploy("TestToken", "TKN");
     testNFT = await NFT.deploy("TestNFT", "NFT");
-    testParcel = await Parcel.deploy(parcelKey);
+    testParcel = await Parcel.deploy(hashedKey);
 
     // Load assets into wallets.
     testToken.faucet(owner.address, 100);
@@ -55,6 +56,7 @@ describe("Parcel contract (naive)", function () {
         to: testParcel.address,
         value: ethers.utils.parseEther("1")
       })
+      
       expect(await testParcel.ethBalance())
         .to
         .equals(ethers.utils.parseEther("1"));
@@ -64,22 +66,34 @@ describe("Parcel contract (naive)", function () {
       // Send ERC-20 from owner to parcel
       await testToken.approve(testParcel.address, 100);
       await testParcel.addTokens(testToken.address, 100);
+      
       expect(await testParcel.tokenBalanceOf(testToken.address)).to.equals(100);
     });
 
     it("Receives ERC-721", async function () {
       // Send ERC-721 from owner to parcel (tokenId = 1)
-      await testNFT.approve(testParcel.address, 1);
-      await testNFT.transferFrom(owner.address, testParcel.address, 1);
+      await testNFT["safeTransferFrom(address,address,uint256)"](owner.address, testParcel.address, 1);
+      
+      expect(await testNFT.ownerOf(1)).to.equals(testParcel.address);
+      expect(await testParcel.balanceOfNFTs()).to.equals(1);
     });
-
-    // it("Does not open for signer with the wrong secret", async function () {
-
-    // });
+  });
         
-    // it("Opens and sends assets to signer with the correct secret", 
-    //   async function () {
-
-    // });
+  describe("Opens", function () {
+    it("Receive assets using the correct secret", async function () {
+      // By this point, parcel should be loaded with ETH, tokens, and an NFT
+      // Owner locks parcel first so it's ready to be sent and received
+      let startBalance: BigNumber = await receiver.getBalance();
+      await testParcel.lock();
+      await testParcel.connect(receiver).open(parcelKey);
+      let endBalance: BigNumber = await receiver.getBalance();
+      let gasCost: BigNumber = startBalance.sub(ethers.utils.parseEther("1"));
+      
+      expect(startBalance.sub(gasCost))
+        .to
+        .equals(ethers.utils.parseEther("1"));
+      expect(await testToken.balanceOf(receiver.address)).to.equals(100);
+      expect(await testNFT.ownerOf(1)).to.equals(receiver.address);
+    });
   });
 });
