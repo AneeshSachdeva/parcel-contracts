@@ -28,6 +28,8 @@ CURRENCY=string
 ```
 See [hardhat-gas-reporter documentation](https://www.npmjs.com/package/hardhat-gas-reporter) for more details on environment variables.
 
+You can obtain a coinmarketcap API key [here](https://pro.coinmarketcap.com/)
+
 ## Testing
 
 ```shell
