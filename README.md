@@ -14,7 +14,25 @@ node scripts/sample-script.js
 npx hardhat help
 ```
 
+## Setup
+
+Add a `.env` file in the project root with the following optional variables:
+```
+# Compiler
+SOLIDITY_VERSION=string
+
+# hardhat-gas-reporter
+REPORT_GAS=bool
+COINMARKETCAP_API_KEY=string
+CURRENCY=string
+```
+See [hardhat-gas-reporter documentation](https://www.npmjs.com/package/hardhat-gas-reporter) for more details on environment variables.
+
 ## Testing
+
+```shell
+npx hardhat test
+```
 
   Parcel contract (naive)
     Deployment
