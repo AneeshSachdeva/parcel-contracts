@@ -3,6 +3,7 @@ pragma solidity >= 0.7.0 < 0.9.0;
 
 import "hardhat/console.sol";
 
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -15,7 +16,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 /// 2. Send any of ETH, ERC-20, or ERC-721 to contract.
 /// 3. Lock the contract with a secret.
 /// 4. Use secret to trasnfer assets out of the contract.
-contract Parcel is IERC721Receiver {
+contract Parcel is Initializable, IERC721Receiver {
     // Parcel states
     enum State { Open, Locked, Emptied }
     State public state;
@@ -43,7 +44,7 @@ contract Parcel is IERC721Receiver {
 
     // Hash of the secret that the recipient uses to
     // unlock the parcel. 
-    bytes32 private hashedSecret;
+    bytes32 private _hashedSecret;
 
     // Events
     event ParcelEmptied(address recipient);
@@ -82,11 +83,10 @@ contract Parcel is IERC721Receiver {
         _;
     }
 
-    constructor(bytes32 hashedSecret_) {
-        // The instantiator is responsible for securing
-        // and sending the parcel.
-        sender = msg.sender;
-        hashedSecret = hashedSecret_;
+    /// Initialize is called by proxies to instantiate a Parcel. 
+    function initialize(bytes32 hashedSecret, address _sender) public initializer {
+        sender = _sender;
+        _hashedSecret = hashedSecret;
     }
 
     /// Make the parcel communal so that it can receive assets from any address.
@@ -104,7 +104,7 @@ contract Parcel is IERC721Receiver {
         bytes32 newHashedSecret
     ) external onlySender {
         // keccak256 consumes >= 30 gas so compute this off chain.
-        hashedSecret = newHashedSecret;
+        _hashedSecret = newHashedSecret;
     }
 
     /// Send ETH to parcel if the parcel is open and the message
@@ -153,10 +153,7 @@ contract Parcel is IERC721Receiver {
     function open(bytes calldata secret) external {
         // Check conditions
         require(state == State.Locked, "Invalid state.");
-        require(
-            hashedSecret == keccak256(secret),
-            "Incorrect secret."
-        );
+        require( _hashedSecret == keccak256(secret), "Incorrect secret.");
         // Emit event
         // Update state
         state = State.Emptied;

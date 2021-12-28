@@ -33,8 +33,7 @@ You can obtain a coinmarketcap API key [here](https://pro.coinmarketcap.com/)
 ## Testing
 
 ```shell
-npx hardhat test
-```
+>> npx hardhat test
 
   Parcel contract (naive)
     Deployment
@@ -75,6 +74,7 @@ npx hardhat test
 ···································|··············|·············|·············|···············|··············
 |  TestToken                       ·           -  ·          -  ·    1300678  ·        4.3 %  ·     504.86  │
 ·----------------------------------|--------------|-------------|-------------|---------------|-------------·
+```
 
 
 ## Interesting things learned during this project:
@@ -94,3 +94,6 @@ npx hardhat test
     - Error message without parameters and documented via NatSpec only needs
     four bytes of data. --> descriptive reverts for less gas
 - Hardhad syntax for calling overloaded function: https://forum.openzeppelin.com/t/where-is-safefromtransfer-function-in-contract-instance/12020
+- Return value of non-constant funciton (neither `pure` nor `view`) is only visible on-chain
+    - https://ethereum.stackexchange.com/questions/88119/i-see-no-way-to-obtain-the-return-value-of-a-non-view-function-ethers-js
+    - Must pass return value to event so it can be obtained off-chain
