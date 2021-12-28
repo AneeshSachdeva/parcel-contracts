@@ -121,11 +121,33 @@ describe("Parcel factory", function () {
       await testParcel.connect(receiver).open(parcelKey);
       const endBalance: BigNumber = await receiver.getBalance();
 
+      // TODO: formulate more precise test for ETH transfer
       expect(parseFloat(ethers.utils.formatEther(endBalance)))
         .to
         .greaterThan(parseFloat(ethers.utils.formatEther(startBalance)));
       expect(await testToken.balanceOf(receiver.address)).to.equals(100);
       expect(await testNFT.ownerOf(1)).to.equals(receiver.address);
     });
+  });
+
+  describe("Security", function () {
+    it("Admin can pause factory", async function () {
+      await parcelFactory.pause();
+      expect(await parcelFactory.paused()).to.equals(true);
+    });
+
+    it("Paused factory does not produce clones", async function () {
+      await expect(parcelFactory.connect(addr1).createParcel(hashedKey))
+        .to
+        .be
+        .revertedWith("Pausable: paused");
+    });
+
+    it("Admin can unpause factory", async function () {
+      await parcelFactory.unpause();
+      expect(await parcelFactory.paused()).to.equals(false);
+    });
+
+    // TODO: add access control tests for parcel.
   });
 });
