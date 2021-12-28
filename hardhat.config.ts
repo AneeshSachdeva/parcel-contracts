@@ -25,7 +25,8 @@ dotenv.config();  // Load .env into process.env
 module.exports = {
   solidity: process.env.SOLIDITY_VERSION ?? "0.8.4",
   gasReporter: {
+    enabled: process.env.REPORT_GAS == "true",
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-    currency: process.env.CURRENCY ?? 'USD'
+    currency: process.env.CURRENCY ?? "USD"
   }
 };
