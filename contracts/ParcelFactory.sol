@@ -1,6 +1,6 @@
 pragma solidity >= 0.7.0 < 0.9.0;
 
-import "./ParcelNaive.sol";
+import "./Parcel.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract ParcelFactory {
