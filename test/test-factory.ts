@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { BigNumber, Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import keccak256 from "keccak256";
@@ -41,9 +41,9 @@ describe("Parcel factory", function () {
     testNFT = await NFT.deploy("TestNFT", "NFT");
 
     // Load assets into wallets.
-    testToken.faucet(sender.address, 100);
-    testToken.faucet(addr1.address, 100);
-    testNFT.mint(sender.address);
+    await testToken.faucet(sender.address, 100);
+    await testToken.faucet(addr1.address, 100);
+    await testNFT.mint(sender.address);
   });
 
   // Tests for correct deployment of the Parcel contract.
