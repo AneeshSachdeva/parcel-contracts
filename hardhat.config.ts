@@ -18,17 +18,24 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
 // Go to https://hardhat.org/config/ to learn more
 
 dotenv.config();  // Load .env into process.env
-
+console.log(process.env.ALCHEMY_API_KEY);
+console.log(process.env.MNEMONIC);
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
   solidity: process.env.SOLIDITY_VERSION ?? "0.8.4",
   networks: {
-    optimistic: {
+    "optimistic": {
       url: 'http://127.0.0.1:8545',
       accounts: { 
         mnemonic: 'test test test test test test test test test test test junk' 
+      }
+    },
+    "optimistic-kovan": {
+      url: `https://opt-kovan.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: {
+        mnemonic: process.env.MNEMONIC
       }
     }
   },
