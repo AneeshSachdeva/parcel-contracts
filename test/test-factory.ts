@@ -1,8 +1,11 @@
+import * as dotenv from "dotenv";
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import { BigNumber, Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import keccak256 from "keccak256";
+
+dotenv.config();  // Load .env into process.env
 
 describe("Parcel factory", function () {
   // Define common variables used across tests
@@ -21,6 +24,10 @@ describe("Parcel factory", function () {
   let sender: SignerWithAddress;    // Creates the parcel and sends assets
   let addr1: SignerWithAddress;     // Sends assets to parcel
   let receiver: SignerWithAddress;  // Receives the parcel
+
+  // Quantities of assets that transfer from sender -> parcel -> receiver
+  const TRANSFER_ETH_AMT = process.env.TRANSFER_ETH_AMT ?? 0.1;
+  const TRANSFER_TKN_AMT = process.env.TRANSFER_TKN_AMT ?? 100;
 
   before(async function () {
     // The key that is used to unlock the parcel and is communicated privately
@@ -41,8 +48,8 @@ describe("Parcel factory", function () {
     testNFT = await NFT.deploy("TestNFT", "NFT");
 
     // Load assets into wallets.
-    await testToken.faucet(sender.address, 100);
-    await testToken.faucet(addr1.address, 100);
+    await testToken.faucet(sender.address, TRANSFER_TKN_AMT);
+    await testToken.faucet(addr1.address, TRANSFER_TKN_AMT);
     await testNFT.mint(sender.address);
   });
 
@@ -80,25 +87,33 @@ describe("Parcel factory", function () {
       // Send ETH from owner to parcel.
       await sender.sendTransaction({
         to: testParcel.address,
-        value: ethers.utils.parseEther("1")
-      })
+        value: ethers.utils.parseEther(`${TRANSFER_ETH_AMT}`)
+      });
       
       expect(await testParcel.ethBalance())
         .to
-        .equals(ethers.utils.parseEther("1"));
+        .equals(ethers.utils.parseEther(`${TRANSFER_ETH_AMT}`));
     });
 
     it("Receives ERC-20 tokens", async function () {
       // Send ERC-20 from to parcel.
-      await testToken.connect(sender).approve(testParcel.address, 100);
-      await testParcel.connect(sender).addTokens(testToken.address, 100);
+      await testToken.connect(sender).approve(
+        testParcel.address,
+        TRANSFER_TKN_AMT
+      );
+      await testParcel.connect(sender).addTokens(
+        testToken.address,
+        TRANSFER_TKN_AMT
+      );
       
-      expect(await testParcel.tokenBalanceOf(testToken.address)).to.equals(100);
+      expect(await testParcel.tokenBalanceOf(testToken.address))
+        .to
+        .equals(TRANSFER_TKN_AMT);
     });
 
-    it("Receives ERC-721", async function () {
+    it("Receives ERC-721 token", async function () {
       // Send ERC-721 to parcel (tokenId = 1).
-      // safeTransferFrom is an overloaded function so we have to use this
+      // safeTransferFrom is an overloaded function so we have to use different
       // syntax to call it.
       await testNFT.connect(sender)
       ["safeTransferFrom(address,address,uint256)"](
@@ -147,7 +162,5 @@ describe("Parcel factory", function () {
       await parcelFactory.unpause();
       expect(await parcelFactory.paused()).to.equals(false);
     });
-
-    // TODO: add access control tests for parcel.
   });
 });
