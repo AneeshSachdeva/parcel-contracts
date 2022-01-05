@@ -14,27 +14,60 @@ node scripts/sample-script.js
 npx hardhat help
 ```
 
+## Deployed Contracts
+
+### Optimistic-Kovan (public L2 testnet)
+
+ParcelFactory: 0xEA69E5bDBe332311EF30F545F5f00a68Fcf608dE
+
+TestToken (ERC-20): 0x26c2dED1DF1728174d44990798a15A72F8F11871
+TestNFT  (ERC-721): 0x45eC1Fa39E1b38e791210803D7063728F57D3722
+
 ## Setup
 
 Add a `.env` file in the project root with the following optional variables:
 ```
 # Compiler
-SOLIDITY_VERSION=string
+SOLIDITY_VERION="0.8.4"
+
+# Optimistic Kovan testnet
+ALCHEMY_API_KEY="<your api key>"
+MNEMONIC="<your secret seed phrase>"
 
 # hardhat-gas-reporter
-REPORT_GAS=bool
-COINMARKETCAP_API_KEY=string
-CURRENCY=string
+REPORT_GAS="true"
+CURRENCY="USD"
+COINMARKETCAP_API_KEY="<your api key>"
+
+# Tests
+TRANSFER_ETH_AMT="0.1"
+TRANSFER_TKN_AMT="100"
 ```
+Run `npx mnemonics` to generate your seed phrase for you testnet accounts.
+
+Obtain an alchemy API key [here](https://www.alchemy.com/layer2/optimism).
+
 See [hardhat-gas-reporter documentation](https://www.npmjs.com/package/hardhat-gas-reporter) for more details on environment variables.
 
-You can obtain a coinmarketcap API key [here](https://pro.coinmarketcap.com/)
+Obtain a coinmarketcap API key [here](https://pro.coinmarketcap.com/).
+
+If you're having trouble obtaining ETH on public networks to run tests, lower the `TRANSFER_ETH_AMT`.
 
 ## Testing
 
+### Optimism (local)
 Follow these instructions to run an [Optimism](https://www.optimism.io/about) dev node locally and connect to it from hardhat:
 1. [Run dev node](https://community.optimism.io/docs/developers/l2/dev-node.html)
-2. [Connect hardhat to node]
+2. [Connect hardhat to node](https://github.com/ethereum-optimism/optimism-tutorial/tree/main/hardhat)
+3. Append `--network optimistic` to any `npx hardhat` command to use the local network.
+
+### Optimism (Kovan)
+Follow these instructions to connect to the Optimism Kovan testnet from hardhat:
+1. Create a new project in Alchemy and select Optimistic Kovan as your target network.
+2. Set `ALCHEMY_API_KEY` in `.env` using the API key from your alchemy project.
+3. Generate a seed phrase using `npx mnemonics`. Keep this safe and do not share!
+4. Set `MNEMONIC` in `.env` using your seed phrase. 
+5. Append `--network optimistic-kovan` to any `npx hardhat` command to use the public testnet. 
 
 ```shell
 >> npx hardhat test
