@@ -8,6 +8,10 @@ import keccak256 from "keccak256";
 dotenv.config();  // Load .env into process.env
 
 describe("Parcel factory", function () {
+  // Increase timeout from default 2000 to support slow tx speeds on public 
+  // testnets.
+  this.timeout(60_000);
+
   // Define common variables used across tests
   let Token: ContractFactory;
   let NFT: ContractFactory;
@@ -33,7 +37,7 @@ describe("Parcel factory", function () {
     // The key that is used to unlock the parcel and is communicated privately
     // off-chain between the sender and recipient. 
     // Key must be hashed off-chain so its privacy is preserved on-chain.
-    parcelKey = Buffer.from('test_key');  // TODO: replace with random buffer
+    parcelKey = Buffer.from(process.env.TEST_SECRET ?? "test_secret"); 
     hashedKey = keccak256(parcelKey);
 
     // Get the ContractFactory and Signers here.
@@ -140,7 +144,9 @@ describe("Parcel factory", function () {
       expect(parseFloat(ethers.utils.formatEther(endBalance)))
         .to
         .greaterThan(parseFloat(ethers.utils.formatEther(startBalance)));
-      expect(await testToken.balanceOf(receiver.address)).to.equals(100);
+      expect(await testToken.balanceOf(receiver.address))
+        .to
+        .equals(TRANSFER_TKN_AMT);
       expect(await testNFT.ownerOf(1)).to.equals(receiver.address);
     });
   });
