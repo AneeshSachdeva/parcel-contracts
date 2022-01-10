@@ -26,7 +26,7 @@ describe("Parcel factory", function () {
 
   let admin: SignerWithAddress;     // Owns the factory and manages security
   let sender: SignerWithAddress;    // Creates the parcel and sends assets
-  let addr1: SignerWithAddress;     // Sends assets to parcel
+  let stranger: SignerWithAddress;  // Sends assets to parcel
   let receiver: SignerWithAddress;  // Receives the parcel
 
   // Quantities of assets that transfer from sender -> parcel -> receiver
@@ -45,7 +45,7 @@ describe("Parcel factory", function () {
     NFT = await ethers.getContractFactory("TestNFT");
     Parcel = await ethers.getContractFactory("Parcel");
     ParcelFactory = await ethers.getContractFactory("ParcelFactory");
-    [admin, sender, addr1, receiver] = await ethers.getSigners();
+    [admin, sender, stranger, receiver] = await ethers.getSigners();
 
     // Deploy contracts.
     testToken = await Token.deploy("TestToken", "TKN");
@@ -53,7 +53,7 @@ describe("Parcel factory", function () {
 
     // Load assets into wallets.
     await testToken.faucet(sender.address, TRANSFER_TKN_AMT);
-    await testToken.faucet(addr1.address, TRANSFER_TKN_AMT);
+    await testToken.faucet(stranger.address, TRANSFER_TKN_AMT);
     await testNFT.mint(sender.address);
   });
 
@@ -89,18 +89,19 @@ describe("Parcel factory", function () {
   describe("Parcel receives assets", function() {
     it("Receives ETH", async function () {
       // Send ETH from owner to parcel.
+      const amount = ethers.utils.parseEther(`${TRANSFER_ETH_AMT}`);
       await sender.sendTransaction({
         to: testParcel.address,
-        value: ethers.utils.parseEther(`${TRANSFER_ETH_AMT}`)
+        value: amount
       });
       
       expect(await testParcel.ethBalance())
         .to
-        .equals(ethers.utils.parseEther(`${TRANSFER_ETH_AMT}`));
+        .equals(amount);
     });
 
     it("Receives ERC-20 tokens", async function () {
-      // Send ERC-20 from to parcel.
+      // Send ERC-20 from owner to parcel.
       await testToken.connect(sender).approve(
         testParcel.address,
         TRANSFER_TKN_AMT
@@ -158,7 +159,7 @@ describe("Parcel factory", function () {
     });
 
     it("Paused factory does not produce clones", async function () {
-      await expect(parcelFactory.connect(addr1).createParcel(hashedKey))
+      await expect(parcelFactory.connect(stranger).createParcel(hashedKey))
         .to
         .be
         .revertedWith("Pausable: paused");
@@ -167,6 +168,13 @@ describe("Parcel factory", function () {
     it("Admin can unpause factory", async function () {
       await parcelFactory.unpause();
       expect(await parcelFactory.paused()).to.equals(false);
+    });
+
+    it("Non-owner cannot pause factory", async function () {
+      await expect(parcelFactory.connect(stranger).pause())
+        .to
+        .be
+        .revertedWith("Ownable: caller is not the owner");
     });
   });
 });
