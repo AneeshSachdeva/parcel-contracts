@@ -21,6 +21,8 @@ contract ParcelFactory is Ownable, Pausable {
     /// @param sender Address of the parcel creator. 
     event ParcelCreated(address parcel, address sender);
 
+    /// @dev Initializes factory by deploying a Parcel contract and setting that
+    /// @dev as the implementation for cloning. 
     constructor() {
         parcelImpl = payable(address(new Parcel()));
     }
