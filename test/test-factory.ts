@@ -33,6 +33,9 @@ describe("Parcel factory", function () {
   const TRANSFER_ETH_AMT = process.env.TRANSFER_ETH_AMT ?? 0.1;
   const TRANSFER_TKN_AMT = process.env.TRANSFER_TKN_AMT ?? 100;
 
+  // TODO: Refactor asset transfers into their own functions for easy 
+  // reusability.
+
   before(async function () {
     // The key that is used to unlock the parcel and is communicated privately
     // off-chain between the sender and recipient. 
@@ -54,7 +57,9 @@ describe("Parcel factory", function () {
     // Load assets into wallets.
     await testToken.faucet(sender.address, TRANSFER_TKN_AMT);
     await testToken.faucet(stranger.address, TRANSFER_TKN_AMT);
-    await testNFT.mint(sender.address);
+    await testNFT.mint(sender.address);   // tokenId = 1
+    await testNFT.mint(sender.address);   // tokenId = 2
+    await testNFT.mint(stranger.address); // tokenId = 3
   });
 
   // Tests for correct deployment of the Parcel contract.
@@ -130,14 +135,48 @@ describe("Parcel factory", function () {
       expect(await testNFT.ownerOf(1)).to.equals(testParcel.address);
       expect(await testParcel.balanceOfNFTs()).to.equals(1);
     });
+
+    it("Rejects assets from stranger", async function () {
+      // Try sending ETH
+      const amount = ethers.utils.parseEther(`${TRANSFER_ETH_AMT}`);
+      await expect(stranger.sendTransaction({
+        to: testParcel.address,
+        value: amount
+      })).to.be.revertedWith("AccessDenied()");
+
+      // Try sending ERC-20
+      await testToken.connect(stranger).approve(
+        testParcel.address,
+        TRANSFER_TKN_AMT
+      );
+      await expect(testParcel.connect(stranger).addTokens(
+        testToken.address,
+        TRANSFER_TKN_AMT
+      )).to.be.revertedWith("AccessDenied()");
+
+      // Try sending ERC-721
+      await expect(testNFT.connect(stranger)
+      ["safeTransferFrom(address,address,uint256)"](
+        stranger.address,    // from
+        testParcel.address,  // to
+        3                    // tokenId
+      )).to.be.revertedWith("AccessDenied()");
+    });
   });
         
   describe("Parcel opens", function () {
-    it("Receive assets using the correct secret", async function () {
+    it("Rejects transfer to signer with incorrect secret", async function () {
+      await expect(testParcel.connect(stranger).open(Buffer.from("wrong key")))
+        .to
+        .be
+        .revertedWith("Incorrect secret.");
+    });
+
+    it("Transfers assets to signer with correct secret", async function () {
       // By this point, parcel should be loaded with ETH, tokens, and an NFT.
       // Sender must lock parcel first for it to be opened by receiver.
       const startBalance: BigNumber = await receiver.getBalance();
-      await testParcel.lock();
+      //await testParcel.lock();
       await testParcel.connect(receiver).open(parcelKey);
       const endBalance: BigNumber = await receiver.getBalance();
 
@@ -149,6 +188,33 @@ describe("Parcel factory", function () {
         .to
         .equals(TRANSFER_TKN_AMT);
       expect(await testNFT.ownerOf(1)).to.equals(receiver.address);
+    });
+
+    it("Rejects new assets from sender", async function () {
+      // Try sending ETH
+      const amount = ethers.utils.parseEther(`${TRANSFER_ETH_AMT}`);
+      await expect(sender.sendTransaction({
+        to: testParcel.address,
+        value: amount
+      })).to.be.revertedWith("ParcelIsEmptied()");
+
+      // Try sending ERC-20
+      await testToken.connect(sender).approve(
+        testParcel.address,
+        TRANSFER_TKN_AMT
+      );
+      await expect(testParcel.connect(sender).addTokens(
+        testToken.address,
+        TRANSFER_TKN_AMT
+      )).to.be.revertedWith("ParcelIsEmptied()");
+
+      // Try sending ERC-721
+      await expect(testNFT.connect(sender)
+      ["safeTransferFrom(address,address,uint256)"](
+        sender.address,      // from
+        testParcel.address,  // to
+        2                    // tokenId
+      )).to.be.revertedWith("ParcelIsEmptied()");
     });
   });
 

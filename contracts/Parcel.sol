@@ -8,23 +8,24 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-/// @title A vault that's unlocked by an off-chain key
-/// @author Aneesh Sachdeva
-/// @notice Use parcel to transmit on-chain assets without knowing the 
-/// @notice recipient's address. This is accomplished through the use of 
-/// @notice an off-chain secret that the sender shares with the recipient. 
-///
-/// 1. Initialize parcel with a keccak256 hash of your secret.
-/// 2. Send any of ETH, ERC-20, or ERC-721 to contract.
-/// 3. Share secret with recipient off-chain.
-/// 4. Recipient uses secret to receive parcel's assets.
+/**
+ * @title A vault that's secured by an off-chain key
+ * @author Aneesh Sachdeva
+ * @notice Use parcel to transmit on-chain assets without knowing the 
+ * recipient's address. This is accomplished through the use of an off-chain 
+ * secret that the sender shares with the recipient. 
+ *
+ * @dev Instructions:
+ * 1. Initialize parcel with a keccak256 hash of your secret.
+ * 2. Send any of ETH, ERC-20, or ERC-721 to contract.
+ * 3. Share secret with recipient off-chain.
+ * 4. Recipient uses secret to receive parcel's assets.
+ */
 contract Parcel is Initializable, IERC721Receiver {
-    // Parcel states
-    enum State { Open, Locked, Emptied }
+    /// @dev Assets can only be added to parcel when it's in the Open state.
+    /// Once a parcel becomes Emptied its state is permanent. 
+    enum State { Open, Emptied }
     State public state;
-
-    // Communal parcels can accept assets from any address.
-    bool public isCommunal;
 
     /// @notice Address of the parcel owner/sender.
     address public sender;
@@ -32,8 +33,8 @@ contract Parcel is Initializable, IERC721Receiver {
     /// @notice ETH in parcel.
     uint256 public ethBalance;
 
-    /// @notice Balances of tokens in parcel. Use array of keys to iterate over the 
-    /// mapping.
+    /// @notice Balances of tokens in parcel. Use array of keys to iterate over  
+    /// the mapping.
     mapping (address => uint256) public tokenBalanceOf;
     address[] tokenAddrs;
 
@@ -52,37 +53,27 @@ contract Parcel is Initializable, IERC721Receiver {
     // Events
     event ParcelEmptied(address recipient);
 
-    // TODO: replace all require strings with custom errors
-    // since they are gas efficient and dynamic.
+    /// @notice Only the sender can call this. 
+    error AccessDenied();
 
-    /// The parcel is locked and cannot accept assets.
-    error ParcelIsLocked();
-    /// The function cannot be called at the current state.
-    error InvalidState();
-    /// Only the sender can call this. 
-    error PermissionDenied();
+    /// @notice Parcel has been emptied and can't be used anymore.
+    error ParcelIsEmptied();
 
     modifier onlySender() {
-        require(
-            msg.sender == sender,
-            "Only the parcel sender can call this."
-        );
+        // require(
+        //     msg.sender == sender,
+        //     "Only the parcel sender can call this."
+        // );
+        if (msg.sender != sender)
+            revert AccessDenied();
         _;
     }
 
-    modifier communal() {
-        if (!isCommunal && msg.sender != sender) {
-            console.log(msg.sender);
-            revert(
-                "Parcel is not communal and cannot accept your asset."
-            );
-        }
-        _;
-    }
-
-    modifier lockable() {
+    modifier whenOpen() {
         // Parcel must be Open to receive assets.
-        require(state == State.Open, "Parcel can't receive assets.");
+        //require(state == State.Open, "Parcel has been emptied and can't be used anymore.");
+        if (state != State.Open)
+            revert ParcelIsEmptied();
         _;
     }
 
@@ -90,40 +81,31 @@ contract Parcel is Initializable, IERC721Receiver {
     /// @dev This contract should only initialized by calling ParcelFactory.createClone()
     /// @param hashedSecret keccack256 hash of the secret used to unlock the parcel.
     /// @param _sender address that initiates parcel creation and adds assets to it.
-    function initialize(bytes32 hashedSecret, address _sender) public initializer {
+    function initialize(
+        bytes32 hashedSecret,
+        address _sender
+    ) public initializer {
         sender = _sender;
         _hashedSecret = hashedSecret;
     }
 
-    /// Make the parcel communal so that it can receive assets from any address.
-    function makeCommunal() external onlySender {
-        isCommunal = true;
-    }
-
-    /// @notice Lock the parcel from receiving any more assets.
-    function lock() external onlySender {
-        state = State.Locked;
-    }
-
     /// @notice Update hashed secret (e.g. for security reasons).
     /// @param newHashedSecret keccak256 hash of the new secret.
-    function updateHashedSecret(
-        bytes32 newHashedSecret
-    ) external onlySender {
+    function updateHashedSecret(bytes32 newHashedSecret) external onlySender {
         // Keccak hash is computed off chain for security.
         _hashedSecret = newHashedSecret;
     }
 
     /// @notice Receives ETH from the parcel owner.
     /// @dev Do not call this. Send a tx to the parcel that contains ETH.
-    receive() external payable lockable communal { 
+    receive() external payable onlySender whenOpen { 
         ethBalance += msg.value;
     }
 
     /// @notice Receives ETH from the parcel owner. 
     /// @dev This function only serves as a fallback for erroneous tx's that
     /// @dev contain ETH. Clients should not intend to call this.
-    fallback() external payable lockable communal {
+    fallback() external payable onlySender whenOpen {
         ethBalance += msg.value;
     }
 
@@ -134,7 +116,7 @@ contract Parcel is Initializable, IERC721Receiver {
     function addTokens(
         address tokenAddr,
         uint256 amount
-    ) external lockable communal {
+    ) external onlySender whenOpen {
         ERC20 token = ERC20(tokenAddr);
         bool success = token.transferFrom(msg.sender, address(this), amount);
         require(success, "Tokens failed to transfer to parcel.");
@@ -156,10 +138,14 @@ contract Parcel is Initializable, IERC721Receiver {
         address from,
         uint256 tokenId,
         bytes memory
-    ) public virtual override lockable returns (bytes4) {
-        // Note: msg.sender is the token contract, operator is the caller
-        if (!isCommunal)
-            require(from == sender, "Cannot accept NFT from this owner.");
+    ) public override returns (bytes4) {
+        // Note: in this case msg.sender is the token contract, not the current
+        // owner of the NFT.
+        // TODO: raise Git Issue: ERC721 does not bubble up reverts with custom
+        // errors. As a work around we'll use require for now.
+        require(from == sender, "AccessDenied()");
+        require(state == State.Open, "ParcelIsEmptied()");
+            
         nfts.push(NFT(msg.sender, tokenId));
 
         return this.onERC721Received.selector;
@@ -169,9 +155,9 @@ contract Parcel is Initializable, IERC721Receiver {
     /// @dev The events emitted by this function will contain the ERC20 and 
     /// @dev ERC721 contract addresses of the assets being transferred (if any).
     /// @param secret The secret that was used to secure this parcel. 
-    function open(bytes calldata secret) external {
+    function open(bytes calldata secret) external whenOpen {
         // Check conditions
-        require(state == State.Locked, "Invalid state.");
+        //require(state == State.Locked, "Invalid state.");
         require( _hashedSecret == keccak256(secret), "Incorrect secret.");
         
         // Update state
