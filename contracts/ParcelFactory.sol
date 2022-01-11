@@ -22,23 +22,20 @@ contract ParcelFactory is Ownable, Pausable {
     event ParcelCreated(address parcel, address sender);
 
     /// @dev Initializes factory by deploying a Parcel contract and setting that
-    /// @dev as the implementation for cloning. 
+    /// @dev as the implementation for cloning.
     constructor() {
         parcelImpl = payable(address(new Parcel()));
     }
 
     /// @notice Clone a parcel and set transaction signer as the parcel owner.
     /// @param hashedSecret keccack256 hash of the secret used to unlock the parcel.
-    /// @return Address of the new parcel clone. 
     function createParcel(
         bytes32 hashedSecret
-    ) external whenNotPaused returns (address payable) {
+    ) external whenNotPaused {
         address payable clone = payable(Clones.clone(parcelImpl));
         Parcel(clone).initialize(hashedSecret, msg.sender);
 
         emit ParcelCreated(clone, msg.sender);
-        
-        return clone;
     }
 
     /// @notice Pauses parcel creation. Only factory owner can call this.
