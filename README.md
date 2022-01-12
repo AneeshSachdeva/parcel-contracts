@@ -7,7 +7,24 @@ Parcel makes it possible to send Ethereum-based digital assets to an individual 
 
 This is done through the use of an on-chain vault secured by an off-chain secret that is transmitted between the two parties. 
 
-## Inroduction
+**Table of Contents**
+1. [Introduction](#introduction)
+2. [Deployed contracts](#deployed-contracts)
+3. [How to use](#how-to-use)
+    1. [Create a parcel](#create-a-parcel)
+    2. [Send assets to parcel](#send-assets-to-parcel)
+    3. [Open parcel](#open-parcel)
+4. [Warnings and open source bugs](#warnings-and-open-source-bugs)
+    1. [Warnings](#warnings)
+    2. [Bugs](#bugs)
+5. [Testing / development](#testing-and-development)
+    1. [Setup](#setup)
+    2. [Hardhat](#hardhat)
+    3. [Connect to Optimism (L2)](#connect-to-optimism)
+    4. [Tests](#tests)
+6. [Gas optimization](#gas-optimization)
+
+## Introduction
 
 This was inspired by the lackluster gift-giving experience for digital assets. Many of us who own digital assets want to share the infectious excitment of owning these assets with the people around us. However, >99% of the world has not yet onboarded with a self-custodial wallet. Without parcel, the current digital asset gifting experience is:
 1. Ask the recipient to create a wallet (e.g. MetaMask) because you'd like to send them something.
@@ -104,7 +121,7 @@ I believe this might be unintended because ownership transfers in `Ownable` requ
 **Optimism fails to bubble up certain reverts:** Work in progress... `Rejects assets from stranger` and `Rejects new assets from sender` tests fail due to this bug when the network is set to `optimistic`. The native `receive()` function of parcel does not revert when it should be. These reverts happen correctly in the default hardhat environment. I need to replicate this error outside of Parcel and test it on various networks before reporting a gitissue to Optimism. 
 
 
-## Testing / development
+## Testing and development
 
 ### Setup
 
@@ -201,7 +218,7 @@ Follow these instructions to connect to the Optimism Kovan testnet from hardhat:
       ✓ Non-owner cannot pause factory (127ms)
 ```
 
-## Gas Costs
+## Gas Optimization
 
 Use [`hardhat-gas-reporter`](https://www.npmjs.com/package/hardhat-gas-reporter) to approximate L1 gas costs (will not work for L2 networks).
 ```shell
