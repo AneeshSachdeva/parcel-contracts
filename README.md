@@ -22,6 +22,7 @@ This is done through the use of an on-chain vault secured by an off-chain secret
     2. [Hardhat](#hardhat)
     3. [Connect to Optimism (L2)](#connect-to-optimism)
     4. [Tests](#tests)
+    5. [Deployment](#deployment)
 6. [Gas optimization](#gas-optimization)
 
 ## Introduction
@@ -216,6 +217,18 @@ Follow these instructions to connect to the Optimism Kovan testnet from hardhat:
       ✓ Paused factory does not produce clones (49ms)
       ✓ Admin can unpause factory (41ms)
       ✓ Non-owner cannot pause factory (127ms)
+```
+
+### Deployment
+
+Deploy ParcelFactory:
+```shell
+npx hardhat run scripts/deploy-factory --network [network]
+```
+
+Deploy test tokens:
+```shell
+npx hardhat run scripts/deploy-tokens --network [network]
 ```
 
 ## Gas Optimization
