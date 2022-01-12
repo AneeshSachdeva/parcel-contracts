@@ -29,20 +29,21 @@ This repository contains the smart contract implementation of Parcel on the Ethe
 
 ### Optimistic-Kovan (public L2 testnet)
 
-ParcelFactory: `0xEA69E5bDBe332311EF30F545F5f00a68Fcf608dE`
+ParcelFactory: `0xEA69E5bDBe332311EF30F545F5f00a68Fcf608dE` ([View on etherscan](https://kovan-optimistic.etherscan.io/address/0xEA69E5bDBe332311EF30F545F5f00a68Fcf608dE))
 
-TestToken (ERC-20): `0x26c2dED1DF1728174d44990798a15A72F8F11871`
-TestNFT  (ERC-721): `0x45eC1Fa39E1b38e791210803D7063728F57D3722`
+TestToken (ERC-20): `0x26c2dED1DF1728174d44990798a15A72F8F11871` ([View on etherscan](https://kovan-optimistic.etherscan.io/address/0x26c2dED1DF1728174d44990798a15A72F8F11871))
+
+TestNFT  (ERC-721): `0x45eC1Fa39E1b38e791210803D7063728F57D3722` ([View on etherscan](https://kovan-optimistic.etherscan.io/address/0x45eC1Fa39E1b38e791210803D7063728F57D3722))
 
 ## How to use
 
-Frontend client prototype is currently in development. (See repository)[https://github.com/AneeshSachdeva/parcel-frontend].
+Frontend client prototype is currently in development. [See repository](https://github.com/AneeshSachdeva/parcel-frontend).
 
-(Refer to the SDK)[https://github.com/AneeshSachdeva/parcel-frontend/tree/master/src/contracts] for examples on how the functionality described below can be implemented in a client.
+[Refer to the SDK](https://github.com/AneeshSachdeva/parcel-frontend/tree/master/src/contracts) for examples on how the functionality described below can be implemented in a client.
 
 ### Create a parcel
 
-Parcel creation is managed by the (ParcelFactory smart contract)[]. The factory holds a reference to a deployment of the (Parcel smart contract)[] and creates parcels by instantiating a lightweight clone that simply delegates all calls to the deployed Parcel contract (i.e. the logic). To create a parcel, do:
+Parcel creation is managed by the [ParcelFactory smart contract](https://github.com/AneeshSachdeva/parcel/blob/master/contracts/ParcelFactory.sol). The factory holds a reference to a deployment of the [Parcel smart contract](https://github.com/AneeshSachdeva/parcel/blob/master/contracts/Parcel.sol) and creates parcels by instantiating a lightweight clone that simply delegates all calls to the deployed Parcel contract (i.e. the logic). To create a parcel, do:
 1. Generate your secret key (it can be anything).
 2. Produce a keccak256 hash of your secret.
 3. Call:
@@ -78,7 +79,7 @@ The parcel will compute the keccack256 hash of `secret`, and if that matches the
 
 TODO: document how to listen to the events emitted by this call. 
 
-## Warnings and OpenSource bugs
+## Warnings and open source bugs
 
 Parcel is still in development. Here are the bugs and potential vulnerabilities that are known at this time.
 
@@ -92,9 +93,9 @@ To reiterate for your safety:
 **DO NOT** circumvent `Parcel.addTokens()` by directly initiating the token transfer from your end. If you do so, the parcel will receive the tokens but not be aware of them, resulting in the tokens being stuck in the parcel. 
 **DO NOT** call the unsafe `transferFrom` because it will not trigger the parcel's `onERC721Received` function and your NFT will be trapped in the parcel.
 
-### OpenBugs
+### Bugs
 
-**OpenZeppelin Ownable x Clones zero-address bug**. Parcel utilizes a modifier `onlySender` that requires `msg.sender` to be the parcel owner (i.e gift giver). It would be safer to replace this modifier with OpenZeppelin's `Ownable` abstraction (as used by `ParcelFactory`), however there's a (potentially unintended) interaction effect between the OpenZeppelin (`Clones` abstraction)[https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Clones.sol] and (`Ownable`)[https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol] where the owner of the clone is set to the zero address. This makes it impossible to transfer ownership of the parcel (e.g. from `address(ParcelFactory)` to `address(parcelSender)`). 
+**OpenZeppelin Ownable x Clones zero-address bug**. Parcel utilizes a modifier `onlySender` that requires `msg.sender` to be the parcel owner (i.e gift giver). It would be safer to replace this modifier with OpenZeppelin's `Ownable` abstraction (as used by `ParcelFactory`), however there's a (potentially unintended) interaction effect between the OpenZeppelin [`Clones` abstraction](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Clones.sol) and [`Ownable`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) where the owner of the clone is set to the zero address. This makes it impossible to transfer ownership of the parcel (e.g. from `address(ParcelFactory)` to `address(parcelSender)`). 
 
 I believe this might be unintended because ownership transfers in `Ownable` require that the new owner cannot be the zero address, but this check is not done in the constructor where the original owner is set. I need to dig deeper into `Clones` to figure out why this is happeneing, replicate the error if I can't find a fix, and submit a gitissue to confirm the error with OpenZeppelin. Could be a fun pull request!
 
@@ -158,7 +159,7 @@ Add `--network [network]` tag to specific specific network for any hardhat comma
 ### Connect to Optimism
 
 [Optimism](https://www.optimism.io/about) is a L2 solution that utilizes optimistic roll-ups to drastically speed up transactions and reduce gas costs. In a nutshell, optimistic roll-ups execute transactions (the expensive part) off-chain and submit merkle proofs back to Layer 1. Transaction data is stored on-chain but is not executed, resulting in cheaper transactions.
-Read more (here)[https://research.paradigm.xyz/rollups].
+Read more [here](https://research.paradigm.xyz/rollups).
 
 #### Optimism (local)
 Follow these instructions to run an [Optimism](https://www.optimism.io/about) dev node locally and connect to it from hardhat:
@@ -202,7 +203,7 @@ Follow these instructions to connect to the Optimism Kovan testnet from hardhat:
 
 ## Gas Costs
 
-Use (`hardhat-gas-reporter`)[https://www.npmjs.com/package/hardhat-gas-reporter] to approximate L1 gas costs (will not work for L2 networks).
+Use [`hardhat-gas-reporter`](https://www.npmjs.com/package/hardhat-gas-reporter) to approximate L1 gas costs (will not work for L2 networks).
 ```shell
 npm install --save-dev hardhat-gas-reporter
 ```
