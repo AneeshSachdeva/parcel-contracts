@@ -1,4 +1,4 @@
-# Parcel
+# 🎁 Parcel
 
 Parcel makes it possible to send Ethereum-based digital assets to an individual without needing to know their wallet address. Parcel currently supports:
 - ERC-20
