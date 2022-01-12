@@ -60,18 +60,13 @@ contract Parcel is Initializable, IERC721Receiver {
     error ParcelIsEmptied();
 
     modifier onlySender() {
-        // require(
-        //     msg.sender == sender,
-        //     "Only the parcel sender can call this."
-        // );
-        if (msg.sender != sender)
+        if (msg.sender != sender) {
             revert AccessDenied();
+        }
         _;
     }
 
     modifier whenOpen() {
-        // Parcel must be Open to receive assets.
-        //require(state == State.Open, "Parcel has been emptied and can't be used anymore.");
         if (state != State.Open)
             revert ParcelIsEmptied();
         _;
@@ -98,7 +93,7 @@ contract Parcel is Initializable, IERC721Receiver {
 
     /// @notice Receives ETH from the parcel owner.
     /// @dev Do not call this. Send a tx to the parcel that contains ETH.
-    receive() external payable onlySender whenOpen { 
+    receive() external payable onlySender whenOpen {
         ethBalance += msg.value;
     }
 
@@ -157,7 +152,6 @@ contract Parcel is Initializable, IERC721Receiver {
     /// @param secret The secret that was used to secure this parcel. 
     function open(bytes calldata secret) external whenOpen {
         // Check conditions
-        //require(state == State.Locked, "Invalid state.");
         require( _hashedSecret == keccak256(secret), "Incorrect secret.");
         
         // Update state
