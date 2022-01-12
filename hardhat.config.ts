@@ -109,6 +109,6 @@ module.exports = {
     enabled: process.env.REPORT_GAS == "true",
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     currency: process.env.CURRENCY ?? "USD",
-    gasPrice: 80
+    gasPrice: process.env.GAS_PRICE
   }
 };
