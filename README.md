@@ -27,7 +27,7 @@ This is done through the use of an on-chain vault secured by an off-chain secret
 
 ## Introduction
 
-This was inspired by the lackluster gift-giving experience for digital assets. Many of us who own digital assets want to share the infectious excitment of owning these assets with the people around us. However, >99% of the world has not yet onboarded with a self-custodial wallet. Without parcel, the current digital asset gifting experience is:
+Parcel was inspired by the lackluster gift-giving experience for digital assets. Many of us who own digital assets want to share the infectious excitment of owning these assets with the people around us. However, >99% of the world has not yet onboarded with a self-custodial wallet. This is the current digital asset gifting experience is:
 1. Ask the recipient to create a wallet (e.g. MetaMask) because you'd like to send them something.
 2. Teach them how to take custody of a wallet, or let them figure it out on their own.
 3. Send the assets to their wallet and tell them to check it.
@@ -41,7 +41,7 @@ Parcel solves all of this utilizing an on-chain vault and off-chain secret key t
 4. The parcel client onboards the user with metamask in a standardized way (if recipient doesn't have a wallet), and as soon as their wallet is connected the assets in the parcel is transferred to the recipient. 
 Through parcel, the gift giver is able replicate the classic, dopaminergic experience (tangible and surprising) of receiving a gift, but now for digital assets. 
 
-This repository contains the smart contract implementation of Parcel on the Ethereum and Optimistic networks, and aims to delivery the most secure experience at the cheapeast gas costs. 
+This repository contains the smart contract implementation of Parcel on the Ethereum and Optimistic networks, and aims to delivery the most **secure experience** at the **cheapeast gas** costs. 
 
 ## Deployed Contracts
 
@@ -105,15 +105,17 @@ Parcel is still in development. Here are the bugs and potential vulnerabilities 
 
 **Potentially breaking:** In theory, it might be possible for miner to frontrun `Parcel.open()` and steal the assets. The only time the unhashed secret is exposed on-chain is during the `open()` call, and similar to how miners extract MEV, a malicious miner who's aware of the Parcel protocol could copy any `Parcel.open()` transaction and resubmit it with a higher gas fee. To prevent this, I need to:
 - Verify that this attack is technically possible
-- If so, is there a way we can use block/mempool data on-chain to make the Parcel contract aware of frontrunning? If the vulnerability is possible then the malicious `open()` call has to be for the same block as the original call. 
+- If so, is there a way we can use block/mempool data on-chain to make the Parcel contract aware of frontrunning?
 
 To reiterate for your safety:
+
 **DO NOT** circumvent `Parcel.addTokens()` by directly initiating the token transfer from your end. If you do so, the parcel will receive the tokens but not be aware of them, resulting in the tokens being stuck in the parcel. 
+
 **DO NOT** call the unsafe `transferFrom` because it will not trigger the parcel's `onERC721Received` function and your NFT will be trapped in the parcel.
 
 ### Bugs
 
-**OpenZeppelin Ownable x Clones zero-address bug**. Parcel utilizes a modifier `onlySender` that requires `msg.sender` to be the parcel owner (i.e gift giver). It would be safer to replace this modifier with OpenZeppelin's `Ownable` abstraction (as used by `ParcelFactory`), however there's a (potentially unintended) interaction effect between the OpenZeppelin [`Clones` abstraction](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Clones.sol) and [`Ownable`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) where the owner of the clone is set to the zero address. This makes it impossible to transfer ownership of the parcel (e.g. from `address(ParcelFactory)` to `address(parcelSender)`). 
+**OpenZeppelin Ownable x Clones zero-address bug:** Parcel utilizes a modifier `onlySender` that requires `msg.sender` to be the parcel owner (i.e gift giver). It would be safer to replace this modifier with OpenZeppelin's `Ownable` abstraction (as used by `ParcelFactory`), however there's a (potentially unintended) interaction effect between the OpenZeppelin [`Clones` abstraction](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Clones.sol) and [`Ownable`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) where the owner of the clone is set to the zero address. This makes it impossible to transfer ownership of the parcel (e.g. from `address(ParcelFactory)` to `address(parcelSender)`). 
 
 I believe this might be unintended because ownership transfers in `Ownable` require that the new owner cannot be the zero address, but this check is not done in the constructor where the original owner is set. I need to dig deeper into `Clones` to figure out why this is happeneing, replicate the error if I can't find a fix, and submit a gitissue to confirm the error with OpenZeppelin. Could be a fun pull request!
 
@@ -282,7 +284,8 @@ This will output gas costs for each transaction every time you run `npx hardhat 
 ·--------------------------------------|--------------|-------------|-------------|---------------|-------------·
 ```
 
-**Parcel deployment vs. ParcelFactory.createParcel()**
+**Naive deployment vs. Factory model**
+
 We can see from this table that naively deploying the Parcel contract would be prohibitively expensive. By implementing the factory model via the OpenZeppeling clones proxy, we're able to reduce parcel deployment cost by over a factor of 10 (compare Parcel deployment cost to ParcelFactory createParcel cost).
 
 Unfortunately as of now there's no convenient way to estimate gas costs on Optimism besides measuring the costs live on their mainnet, but they should provide a 10-100x reduction (savings will increase with greater network adoption).
