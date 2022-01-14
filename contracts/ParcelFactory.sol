@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 /// @dev bytecode is not loaded on-chain with each deployment.
 contract ParcelFactory is Ownable, Pausable {
     /// @notice Address of the cloneable parcel contract.
-    address payable immutable parcelImpl;
+    address immutable parcelImpl;
 
     /// @notice Emitted when a parcel is cloned.
     /// @param parcel Address of the new parcel contract.
